@@ -9,7 +9,6 @@ const y = coords.filter((_, index) => index % 2 === 1);
 
 const minX = Math.min(...x);
 const minY = Math.min(...y);
-
 const gridWidth = Math.max(...x) - minX + 1;
 const gridHeight = Math.max(...y) - minY + 1;
 
