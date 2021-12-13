@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 const data = fs.readFileSync(`${__dirname}/../data/day-5.txt`, "utf8");
-// .readFileSync(`${__dirname}/../tests/day-5.txt`, "utf8");
+// .readFileSync(`${__dirname}/../testData/day-5.txt`, "utf8");
 
 const coords = data.match(/[0-9]+/g).map((digit) => parseInt(digit));
 const x = coords.filter((_, index) => index % 2 === 0);

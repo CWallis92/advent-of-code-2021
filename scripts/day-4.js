@@ -38,7 +38,7 @@ class Board {
 
 const data = fs
   .readFileSync(`${__dirname}/../data/day-4.txt`, "utf8")
-  // .readFileSync(`${__dirname}/../tests/day-4.txt`, "utf8")
+  // .readFileSync(`${__dirname}/../testData/day-4.txt`, "utf8")
   .split("\n\n");
 
 const inputs = data.shift().split(",");
