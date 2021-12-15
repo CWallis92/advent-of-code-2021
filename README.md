@@ -6,3 +6,4 @@
 4. https://adventofcode.com/2021/day/4
 5. https://adventofcode.com/2021/day/5
 6. https://adventofcode.com/2021/day/6
+7. https://adventofcode.com/2021/day/7
