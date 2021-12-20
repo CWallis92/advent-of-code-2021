@@ -7,3 +7,9 @@
 5. https://adventofcode.com/2021/day/5
 6. https://adventofcode.com/2021/day/6
 7. https://adventofcode.com/2021/day/7
+8. https://adventofcode.com/2021/day/8
+9. https://adventofcode.com/2021/day/9
+10. https://adventofcode.com/2021/day/10
+11. https://adventofcode.com/2021/day/11
+12. https://adventofcode.com/2021/day/12
+13. https://adventofcode.com/2021/day/13
