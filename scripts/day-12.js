@@ -131,6 +131,7 @@ class Graph {
         }
         this.caves.get(start).resetVisits();
         path.pop();
+        // this.secondVisitUsed = false;
       }
     }
   }
@@ -148,10 +149,7 @@ data.forEach((edge) => {
 
 console.log("Part 1:", Array.from(cavesGraph.findPaths("start", "end")).length);
 
-console.log(cavesGraph.findPaths("start", "end", true).next());
-console.log(cavesGraph.findPaths("start", "end", true).next());
-
-// console.log(
-//   "Part 2:",
-//   Array.from(cavesGraph.findPaths("start", "end", true)).sort()
-// );
+console.log(
+  "Part 2:",
+  Array.from(cavesGraph.findPaths("start", "end", true)).length
+);
