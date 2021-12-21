@@ -3,8 +3,8 @@ const fs = require("fs");
 const data = fs
   .readFileSync(
     `${__dirname}/../` +
-      "testData" +
-      // "data" +
+      // "testData" +
+      "data" +
       `/day-${__filename.split("/day-")[1].split(".")[0]}.txt`,
     "utf8"
   )
@@ -56,7 +56,7 @@ class Cave {
 class Graph {
   constructor(edgeDirection = Graph.UNDIRECTED) {
     this.caves = new Map();
-    this.secondVisitUsed = false; // Used for part 2
+    this.secondVisit = false; // Used for part 2
     this.edgeDirection = edgeDirection;
   }
 
@@ -118,10 +118,10 @@ class Graph {
         this.caves.get(start).value !== "start" &&
         this.caves.get(start).value !== "end" &&
         !this.caves.get(start).newVisitIsAllowed() &&
-        !this.secondVisitUsed
+        !this.secondVisit
       ) {
         this.caves.get(start).resetVisits();
-        this.secondVisitUsed = true;
+        this.secondVisit = true;
       }
       if (this.caves.get(start) && this.caves.get(start).newVisitIsAllowed()) {
         path.push(start);
@@ -129,9 +129,19 @@ class Graph {
         for (const neighbour of this.caves.get(start).getAdjacents()) {
           yield* this.findPaths(neighbour.value, destination, partTwo, path);
         }
-        this.caves.get(start).resetVisits();
         path.pop();
-        // this.secondVisitUsed = false;
+        if (
+          path.filter(
+            (cave, i) =>
+              cave === cave.toLowerCase() &&
+              path.filter((unique) => unique === path[i]).length > 1
+          ).length === 0
+        ) {
+          this.secondVisit = false;
+        }
+        if (!path.includes(this.caves.get(start).value)) {
+          this.caves.get(start).resetVisits();
+        }
       }
     }
   }
@@ -149,7 +159,6 @@ data.forEach((edge) => {
 
 console.log("Part 1:", Array.from(cavesGraph.findPaths("start", "end")).length);
 
-console.log(
-  "Part 2:",
-  Array.from(cavesGraph.findPaths("start", "end", true)).length
-);
+const answer = Array.from(cavesGraph.findPaths("start", "end", true)).sort();
+
+console.log("Part 2:", answer.length);
