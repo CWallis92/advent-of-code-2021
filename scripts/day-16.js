@@ -4,8 +4,8 @@ const { decode, version } = require("punycode");
 const data = fs
   .readFileSync(
     `${__dirname}/../` +
-      "testData" +
-      // "data" +
+      // "testData" +
+      "data" +
       `/day-${__filename.split("/day-")[1].split(".")[0]}.txt`,
     "utf8"
   )
@@ -88,6 +88,12 @@ const parsePacket = (packet) => {
           break;
         case 5:
           acc = nums[0] > nums[1] ? 1 : 0;
+          break;
+        case 6:
+          acc = nums[0] < nums[1] ? 1 : 0;
+          break;
+        case 7:
+          acc = nums[0] === nums[1] ? 1 : 0;
           break;
         default:
           break;
