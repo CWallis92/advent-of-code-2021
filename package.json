@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/CWallis92/advent-of-code-2021/issues"
   },
-  "homepage": "https://github.com/CWallis92/advent-of-code-2021#readme"
+  "homepage": "https://github.com/CWallis92/advent-of-code-2021#readme",
+  "dependencies": {
+    "node-dijkstra": "^2.5.0"
+  }
 }
