@@ -1,5 +1,4 @@
 const fs = require("fs");
-const { decode, version } = require("punycode");
 
 const data = fs
   .readFileSync(
