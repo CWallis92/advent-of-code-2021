@@ -3,76 +3,103 @@ const fs = require("fs");
 const data = fs
   .readFileSync(
     `${__dirname}/../` +
-      "testData" +
-      // "data" +
+      // "testData" +
+      "data" +
       `/day-${__filename.split("/day-")[1].split(".")[0]}.txt`,
     "utf8"
   )
   .split("\n");
-// .map((array) => JSON.parse(array));
 
-const getExplodeIndex = (arrStr) => {
+const getExplodeIndex = (arr) => {
   let bracketCount = 0,
     char = 0;
-  while (char < arrStr.length) {
-    if (arrStr[char] === "[") bracketCount++;
-    if (arrStr[char] === "]") bracketCount--;
+  while (char < arr.length) {
+    if (arr[char] === "[") bracketCount++;
+    if (arr[char] === "]") bracketCount--;
     if (bracketCount === 5) break;
     char++;
   }
-  return char === arrStr.length ? -1 : char;
+  return char === arr.length ? -1 : char;
 };
 
-const addPairs = (arrStr1, arrStr2) => {
-  let sumArrStr = `[${arrStr1},${arrStr2}]`,
-    explodeIndex = getExplodeIndex(sumArrStr),
-    splitIndex = sumArrStr.search(/\d{2}/);
+const fishReduce = (arr) => {
+  let explodeIndex = getExplodeIndex(arr);
+  if (explodeIndex > -1) {
+    const explodeArr = arr.substring(explodeIndex).match(/\[[\d,]+\]/)[0];
+    const parsedExplode = JSON.parse(explodeArr);
 
-  while (explodeIndex > -1 || splitIndex > -1) {
-    if ((splitIndex > -1 && splitIndex < explodeIndex) || explodeIndex === -1) {
-      const num = parseInt(sumArrStr.substring(splitIndex).match(/\d{2}/)[0]);
-      const preString = sumArrStr.substring(0, splitIndex);
-      const postString = sumArrStr.substring(splitIndex + 2);
-      sumArrStr = `${preString}[${Math.floor(num / 2)},${Math.ceil(
-        num / 2
-      )}]${postString}`;
-    } else {
-      const deepArr = JSON.parse(
-        sumArrStr.substring(explodeIndex).match(/\[[\d,]+\]/)
+    let leftArr = arr.substring(0, explodeIndex);
+    const leftNum = leftArr.match(/\d+(?!.*\d+)/);
+    if (leftNum) {
+      leftArr = leftArr.replace(
+        /\d+(?!.*\d+)/,
+        parseInt(leftNum[0]) + parsedExplode[0]
       );
-      let preString = sumArrStr.substring(0, explodeIndex);
-
-      const preDigit = preString.match(/\d(?!.*\d)/);
-
-      if (preDigit) {
-        const newNum = parseInt(preDigit[0]) + deepArr[0];
-        preString = preString.replace(/\d(?!.*\d)/, newNum.toString());
-      }
-
-      let postString = sumArrStr.substring(explodeIndex);
-      let x = postString.indexOf("]") + 1;
-      postString = postString.substring(x);
-      const postDigit = postString.match(/\d+/);
-
-      if (postDigit) {
-        const newNum = parseInt(postDigit[0]) + deepArr[1];
-        postString = postString.replace(/\d+/, newNum);
-      }
-
-      sumArrStr = `${preString}0${postString}`;
     }
-    explodeIndex = getExplodeIndex(sumArrStr);
-    splitIndex = sumArrStr.search(/\d{2}/);
+
+    let rightArr = arr.substring(explodeIndex + explodeArr.length);
+    const rightNum = rightArr.match(/\d+/);
+    if (rightNum) {
+      rightArr = rightArr.replace(
+        /\d+/,
+        parseInt(rightNum[0]) + parsedExplode[1]
+      );
+    }
+
+    return fishReduce(leftArr + "0" + rightArr);
   }
-  return sumArrStr;
+
+  let splitIndex = arr.search(/\d{2}/);
+  if (splitIndex > -1) {
+    const splitNum = arr.substring(splitIndex).match(/\d{2}/)[0];
+
+    const leftArr = arr.substring(0, splitIndex);
+    const rightArr = arr.substring(splitIndex + splitNum.length);
+
+    return fishReduce(
+      leftArr +
+        "[" +
+        Math.floor(parseInt(splitNum) / 2) +
+        "," +
+        Math.ceil(parseInt(splitNum) / 2) +
+        "]" +
+        rightArr
+    );
+  }
+
+  return arr;
 };
 
-let outStr = addPairs(data[0], data[1]),
-  index = 2;
+const summedArray = data.reduce((acc, curr) => {
+  if (acc === "") return fishReduce(curr);
+  acc = "[" + acc + "," + curr + "]";
+  acc = fishReduce(acc);
 
-// while (index < data.length) {
-//   outStr = addPairs(outStr, data[index]);
-//   index++;
-// }
+  return acc;
+}, "");
 
-console.log("Part 1:", outStr);
+const getMagnitude = (input) => {
+  let out = 0;
+  out += Array.isArray(input[0]) ? 3 * getMagnitude(input[0]) : 3 * input[0];
+  out += Array.isArray(input[1]) ? 2 * getMagnitude(input[1]) : 2 * input[1];
+  return out;
+};
+
+console.log("Part 1:", getMagnitude(JSON.parse(summedArray)));
+
+let max = 0,
+  index = 0;
+while (index < data.length) {
+  const splicedData = JSON.parse(JSON.stringify(data));
+  const currNum = splicedData.splice(index, 1);
+
+  splicedData.forEach((arr) => {
+    const sum = "[" + currNum + "," + arr + "]";
+    const magnitude = getMagnitude(JSON.parse(fishReduce(sum)));
+    if (magnitude > max) max = magnitude;
+  });
+
+  index++;
+}
+
+console.log("Part 2:", max);
