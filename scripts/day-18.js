@@ -8,62 +8,71 @@ const data = fs
       `/day-${__filename.split("/day-")[1].split(".")[0]}.txt`,
     "utf8"
   )
-  .split("\n")
-  .map((array) => JSON.parse(array));
+  .split("\n");
+// .map((array) => JSON.parse(array));
 
-console.log(data);
+const getExplodeIndex = (arrStr) => {
+  let bracketCount = 0,
+    char = 0;
+  while (char < arrStr.length) {
+    if (arrStr[char] === "[") bracketCount++;
+    if (arrStr[char] === "]") bracketCount--;
+    if (bracketCount === 5) break;
+    char++;
+  }
+  return char === arrStr.length ? -1 : char;
+};
 
-const applyReducer = (arr) => {
-  let i = 0;
+const addPairs = (arrStr1, arrStr2) => {
+  let sumArrStr = `[${arrStr1},${arrStr2}]`,
+    explodeIndex = getExplodeIndex(sumArrStr),
+    splitIndex = sumArrStr.search(/\d{2}/);
 
-  while (i < arr.length) {
-    // Check current array item depth. If 4, return new array with explosion
-    if (Array.isArray(arr[i])) {
-      const nestedArr = arr[i];
+  while (explodeIndex > -1 || splitIndex > -1) {
+    if ((splitIndex > -1 && splitIndex < explodeIndex) || explodeIndex === -1) {
+      const num = parseInt(sumArrStr.substring(splitIndex).match(/\d{2}/)[0]);
+      const preString = sumArrStr.substring(0, splitIndex);
+      const postString = sumArrStr.substring(splitIndex + 2);
+      sumArrStr = `${preString}[${Math.floor(num / 2)},${Math.ceil(
+        num / 2
+      )}]${postString}`;
+    } else {
+      const deepArr = JSON.parse(
+        sumArrStr.substring(explodeIndex).match(/\[[\d,]+\]/)
+      );
+      let preString = sumArrStr.substring(0, explodeIndex);
 
-      depth++;
-      if (depth === 4) {
-        const str = JSON.stringify(arr);
-        const explodeLoc = str.indexOf(`[${arr[i]}]`);
+      const preDigit = preString.match(/\d(?!.*\d)/);
 
-        let preString = str.substring(0, explodeLoc);
-        const preDigit = preString.match(/\d(?!.*\d)/);
-        if (preDigit) {
-          const newNum = parseInt(preDigit) + arr[0];
-          preString = preString.replace(/\d(?!.*\d)/, newNum.toString());
-        }
-
-        let postString = str.substring(explodeLoc + 5);
-        const postDigit = postString.match(/\d/);
-        if (postDigit) {
-          const newNum = parseInt(postDigit) + arr[1];
-          postString.replace(/\d/, newNum);
-        }
-
-        return [JSON.parse(preString + "0" + postString), false];
+      if (preDigit) {
+        const newNum = parseInt(preDigit[0]) + deepArr[0];
+        preString = preString.replace(/\d(?!.*\d)/, newNum.toString());
       }
-    }
 
-    // This bit should be fine? Apply recursion
-    else if (item >= 10) {
-      arr[i] = [Math.floor(arr[i]), Math.ceil(arr[i])];
-      return [arr, false];
-    }
+      let postString = sumArrStr.substring(explodeIndex);
+      let x = postString.indexOf("]") + 1;
+      postString = postString.substring(x);
+      const postDigit = postString.match(/\d+/);
 
-    i++;
+      if (postDigit) {
+        const newNum = parseInt(postDigit[0]) + deepArr[1];
+        postString = postString.replace(/\d+/, newNum);
+      }
+
+      sumArrStr = `${preString}0${postString}`;
+    }
+    explodeIndex = getExplodeIndex(sumArrStr);
+    splitIndex = sumArrStr.search(/\d{2}/);
   }
-
-  return [arr, true];
+  return sumArrStr;
 };
 
-const addPairs = (arr1, arr2) => {
-  let sumArr = [arr1].concat([arr2]);
-  let finished = false;
-  while (!finished) {
-    const [newArr, newFinished] = applyReducer(sumArr);
-    sumArr = newArr;
-    finished = newFinished;
-  }
-};
+let outStr = addPairs(data[0], data[1]),
+  index = 2;
 
-console.log(addPairs(data[0], data[1]));
+// while (index < data.length) {
+//   outStr = addPairs(outStr, data[index]);
+//   index++;
+// }
+
+console.log("Part 1:", outStr);
