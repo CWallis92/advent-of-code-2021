@@ -3,8 +3,8 @@ const fs = require("fs");
 const data = fs
   .readFileSync(
     `${__dirname}/../` +
-      "testData" +
-      // "data" +
+      // "testData" +
+      "data" +
       `/day-${__filename.split("/day-")[1].split(".")[0]}.txt`,
     "utf8"
   )
@@ -18,6 +18,7 @@ const scannerMaps = data.map((scanner, index) => {
   );
 
   return {
+    // scannerLoc: index === 0 ? [0, 0] : null,
     scannerLoc: index === 0 ? [0, 0, 0] : null,
     beaconVectors: {
       0: beaconCoords,
@@ -26,106 +27,187 @@ const scannerMaps = data.map((scanner, index) => {
   };
 });
 
-let currUnknownScanner = 1,
-  currKnownScanner = 0,
-  matches;
+// Add all 3D variations on scannerMaps
+if (scannerMaps[0].scannerLoc.length === 3) {
+  scannerMaps.forEach(({ beaconVectors }) => {
+    beaconVectors[1] = beaconVectors[0].map(([x, y, z]) => [-y, x, z]);
+    beaconVectors[2] = beaconVectors[0].map(([x, y, z]) => [-x, -y, z]);
+    beaconVectors[3] = beaconVectors[0].map(([x, y, z]) => [y, -x, z]);
+    // 4: Set y as up: x = x, y = z, z = -y
+    beaconVectors[4] = beaconVectors[0].map(([x, y, z]) => [x, z, -y]);
+    beaconVectors[5] = beaconVectors[4].map(([x, y, z]) => [-y, x, z]);
+    beaconVectors[6] = beaconVectors[4].map(([x, y, z]) => [-x, -y, z]);
+    beaconVectors[7] = beaconVectors[4].map(([x, y, z]) => [y, -x, z]);
+    // 8: Flip upside down in x: x = x, y = -y, z = -z
+    beaconVectors[8] = beaconVectors[0].map(([x, y, z]) => [x, -y, -z]);
+    beaconVectors[9] = beaconVectors[8].map(([x, y, z]) => [-y, x, z]);
+    beaconVectors[10] = beaconVectors[8].map(([x, y, z]) => [-x, -y, z]);
+    beaconVectors[11] = beaconVectors[8].map(([x, y, z]) => [y, -x, z]);
+    // 12: Set -y as up: x = x, y = -z, z = y
+    beaconVectors[12] = beaconVectors[0].map(([x, y, z]) => [x, -z, y]);
+    beaconVectors[13] = beaconVectors[12].map(([x, y, z]) => [-y, x, z]);
+    beaconVectors[14] = beaconVectors[12].map(([x, y, z]) => [-x, -y, z]);
+    beaconVectors[15] = beaconVectors[12].map(([x, y, z]) => [y, -x, z]);
+    // 16: Set x as up: x = z, y = y, z = -x
+    beaconVectors[16] = beaconVectors[0].map(([x, y, z]) => [z, y, -x]);
+    beaconVectors[17] = beaconVectors[16].map(([x, y, z]) => [-y, x, z]);
+    beaconVectors[18] = beaconVectors[16].map(([x, y, z]) => [-x, -y, z]);
+    beaconVectors[19] = beaconVectors[16].map(([x, y, z]) => [y, -x, z]);
+    // 20: Set -x as up: x = -z, y = y, z = x
+    beaconVectors[20] = beaconVectors[0].map(([x, y, z]) => [-z, y, x]);
+    beaconVectors[21] = beaconVectors[20].map(([x, y, z]) => [-y, x, z]);
+    beaconVectors[22] = beaconVectors[20].map(([x, y, z]) => [-x, -y, z]);
+    beaconVectors[23] = beaconVectors[20].map(([x, y, z]) => [y, -x, z]);
+  });
+}
 
-while (!scannerMaps.every((scanner) => scanner.scannerLoc)) {
-  currKnownScannerIndex = 0;
-  let unknownScannerRelativeVector,
-    orientation = 0;
+let currKnownScanner = 0,
+  currUnknownScanner = 1,
+  foundScanners = 1;
+
+const checkedIndexes = [];
+
+while (foundScanners < scannerMaps.length) {
+  console.log(`Checking against scanner ${currKnownScanner}:`);
+
+  const knownScannerOrientation =
+    scannerMaps[currKnownScanner].correctOrientation;
+  let knownScannerReferralBeaconIndex = 0;
 
   while (
-    orientation <
-    Object.keys(scannerMaps[currUnknownScanner].beaconVectors).length
+    knownScannerReferralBeaconIndex <
+      scannerMaps[currKnownScanner].beaconVectors[knownScannerOrientation]
+        .length &&
+    !scannerMaps[currUnknownScanner].scannerLoc
   ) {
-    matches = 0;
+    let knownScannerReferralBeacon =
+        scannerMaps[currKnownScanner].beaconVectors[knownScannerOrientation][
+          knownScannerReferralBeaconIndex
+        ],
+      unknownScannerOrientation = 0;
 
     while (
-      currKnownScannerIndex <
-      scannerMaps[currKnownScanner].beaconVectors[0].length
+      unknownScannerOrientation < 24 &&
+      scannerMaps[currUnknownScanner].correctOrientation === null
     ) {
-      let currMatches = 0;
+      let unknownScannerReferralBeaconIndex = 0,
+        unknownScannerOrientationMap =
+          scannerMaps[currUnknownScanner].beaconVectors[
+            unknownScannerOrientation
+          ];
 
-      unknownScannerRelativeVector = [
-        scannerMaps[currKnownScanner].beaconVectors[
-          scannerMaps[currKnownScanner].correctOrientation
-        ][currKnownScannerIndex][0] -
-          scannerMaps[currUnknownScanner].beaconVectors[orientation][
-            currKnownScannerIndex
-          ][0],
-        scannerMaps[currKnownScanner].beaconVectors[
-          scannerMaps[currKnownScanner].correctOrientation
-        ][currKnownScannerIndex][1] -
-          scannerMaps[currUnknownScanner].beaconVectors[orientation][
-            currKnownScannerIndex
-          ][1],
-        scannerMaps[currKnownScanner].beaconVectors[
-          scannerMaps[currKnownScanner].correctOrientation
-        ][currKnownScannerIndex][2] -
-          scannerMaps[currUnknownScanner].beaconVectors[orientation][
-            currKnownScannerIndex
-          ][2],
-      ];
-      currMatches++;
+      while (
+        unknownScannerReferralBeaconIndex <
+        scannerMaps[currUnknownScanner].beaconVectors[unknownScannerOrientation]
+          .length
+      ) {
+        let unknownScannerReferralBeacon =
+          unknownScannerOrientationMap[unknownScannerReferralBeaconIndex];
 
-      let remainingBeacons = JSON.parse(
-        JSON.stringify(scannerMaps[currKnownScanner].beaconVectors[orientation])
-      );
-      remainingBeacons.splice(currKnownScannerIndex, 1);
+        let unknownScannerRelativeVector = [
+            knownScannerReferralBeacon[0] - unknownScannerReferralBeacon[0],
+            knownScannerReferralBeacon[1] - unknownScannerReferralBeacon[1],
+            knownScannerReferralBeacon[2] - unknownScannerReferralBeacon[2],
+          ],
+          matchedBeacons = 1;
 
-      remainingBeacons.forEach((beacon) => {
-        let relativeVector = JSON.stringify(
-          beacon.map(
-            (coord, index) => coord - unknownScannerRelativeVector[index]
+        let remainingKnownBeacons = JSON.parse(
+          JSON.stringify(
+            scannerMaps[currKnownScanner].beaconVectors[knownScannerOrientation]
           )
         );
-        if (
-          JSON.stringify(
-            scannerMaps[currUnknownScanner].beaconVectors[orientation]
-          ).indexOf(relativeVector) > -1
-        )
-          currMatches++;
-      });
+        remainingKnownBeacons.splice(knownScannerReferralBeaconIndex, 1);
 
-      if (currMatches > matches) {
-        matches = currMatches;
-        scannerMaps[currUnknownScanner].correctOrientation = orientation;
+        remainingKnownBeacons.forEach((beacon) => {
+          let relativeVector = JSON.stringify(
+            beacon.map(
+              (coord, index) => coord - unknownScannerRelativeVector[index]
+            )
+          );
+          if (
+            JSON.stringify(
+              scannerMaps[currUnknownScanner].beaconVectors[
+                unknownScannerOrientation
+              ]
+            ).indexOf(relativeVector) > -1
+          )
+            matchedBeacons++;
+        });
+
+        // if (matchedBeacons >= 3) {
+        if (matchedBeacons >= 12) {
+          scannerMaps[currUnknownScanner].correctOrientation =
+            unknownScannerOrientation;
+          scannerMaps[currUnknownScanner].scannerLoc =
+            unknownScannerRelativeVector.map(
+              (axis, index) =>
+                axis + scannerMaps[currKnownScanner].scannerLoc[index]
+            );
+          break;
+        }
+
+        unknownScannerReferralBeaconIndex++;
       }
 
-      currKnownScannerIndex++;
+      unknownScannerOrientation++;
     }
 
-    // if (matches >= 12) break;
-    if (matches >= 3) break;
-
-    orientation++;
+    knownScannerReferralBeaconIndex++;
   }
 
-  // if (matches >= 12) {
-  if (matches >= 3) {
-    scannerMaps[currUnknownScanner].scannerLoc = unknownScannerRelativeVector;
-    currUnknownScanner = scannerMaps.findIndex(
-      (scanner) => !scanner.scannerLoc
-    );
+  if (scannerMaps[currUnknownScanner].scannerLoc) {
+    foundScanners++;
+    console.log(`\tFound scanner ${currUnknownScanner}`);
   }
 
-  currUnknownScanner = scannerMaps
-    .filter((_, index) => index !== currUnknownScanner)
-    .findIndex((scanner) => !scanner.scannerLoc);
+  if (currKnownScanner === 10) {
+    let x = true;
+  }
 
-  if (currUnknownScanner === scannerMaps.length) {
-    currKnownScanner = scannerMaps
-      .filter((_, index) => index !== currKnownScanner)
-      .findIndex((scanner) => scanner.scannerLoc);
-    currUnknownScanner = scannerMaps.findIndex(
-      (scanner) => !scanner.scannerLoc
+  if (
+    scannerMaps.filter(
+      ({ scannerLoc }, index) => index > currUnknownScanner && !scannerLoc
+    ).length === 0 &&
+    foundScanners < scannerMaps.length
+  ) {
+    currUnknownScanner = scannerMaps.findIndex(({ scannerLoc }) => !scannerLoc);
+    checkedIndexes.push(currKnownScanner);
+    currKnownScanner = scannerMaps.findIndex(
+      ({ scannerLoc }, index) =>
+        scannerLoc && checkedIndexes.indexOf(index) === -1
     );
+  } else {
+    currUnknownScanner =
+      scannerMaps
+        .filter((_, index) => index > currUnknownScanner)
+        .findIndex(({ scannerLoc }) => !scannerLoc) +
+      currUnknownScanner +
+      1;
   }
 }
 
-console.log(scannerMaps);
+let uniqueBeacons = scannerMaps[0].beaconVectors[0];
 
-const getOrientationVectors = (scannerObj) => {
-  return scannerObj;
-};
+const remainingScanners = JSON.parse(JSON.stringify(scannerMaps));
+remainingScanners.shift();
+
+remainingScanners.forEach((scanner) => {
+  scanner.beaconVectors[scanner.correctOrientation].forEach((beacon) => {
+    const relativeBeacon = beacon.map(
+      (axis, index) => axis + scanner.scannerLoc[index]
+    );
+    if (
+      !uniqueBeacons.find((uniqueBeacon) => {
+        return (
+          uniqueBeacon[0] === relativeBeacon[0] &&
+          uniqueBeacon[1] === relativeBeacon[1] &&
+          uniqueBeacon[2] === relativeBeacon[2]
+        );
+      })
+    ) {
+      uniqueBeacons.push(relativeBeacon);
+    }
+  });
+});
+
+console.log(uniqueBeacons.length);
