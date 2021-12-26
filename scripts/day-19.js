@@ -68,7 +68,7 @@ let currKnownScanner = 0,
 const checkedIndexes = [];
 
 while (foundScanners < scannerMaps.length) {
-  console.log(`Checking against scanner ${currKnownScanner}:`);
+  // console.log(`Checking against scanner ${currKnownScanner}:`);
 
   const knownScannerOrientation =
     scannerMaps[currKnownScanner].correctOrientation;
@@ -157,7 +157,7 @@ while (foundScanners < scannerMaps.length) {
 
   if (scannerMaps[currUnknownScanner].scannerLoc) {
     foundScanners++;
-    console.log(`\tFound scanner ${currUnknownScanner}`);
+    console.log(`Found scanner ${currUnknownScanner}`);
   }
 
   if (
