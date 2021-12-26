@@ -160,15 +160,11 @@ while (foundScanners < scannerMaps.length) {
     console.log(`\tFound scanner ${currUnknownScanner}`);
   }
 
-  if (currKnownScanner === 10) {
-    let x = true;
-  }
-
   if (
+    foundScanners < scannerMaps.length &&
     scannerMaps.filter(
       ({ scannerLoc }, index) => index > currUnknownScanner && !scannerLoc
-    ).length === 0 &&
-    foundScanners < scannerMaps.length
+    ).length === 0
   ) {
     currUnknownScanner = scannerMaps.findIndex(({ scannerLoc }) => !scannerLoc);
     checkedIndexes.push(currKnownScanner);
@@ -189,6 +185,7 @@ while (foundScanners < scannerMaps.length) {
 let uniqueBeacons = scannerMaps[0].beaconVectors[0];
 
 const remainingScanners = JSON.parse(JSON.stringify(scannerMaps));
+const scannerIndexes = remainingScanners.map(({ scannerLoc }) => scannerLoc);
 remainingScanners.shift();
 
 remainingScanners.forEach((scanner) => {
@@ -210,4 +207,26 @@ remainingScanners.forEach((scanner) => {
   });
 });
 
-console.log(uniqueBeacons.length);
+console.log("Part 1:", uniqueBeacons.length);
+
+const manhattanDistance = scannerIndexes.reduce((acc, curr, index) => {
+  if (index === scannerIndexes.length - 1) return acc;
+
+  let distance = 0;
+  for (
+    let checkIndex = index + 1;
+    checkIndex < scannerIndexes.length;
+    checkIndex++
+  ) {
+    const sum =
+      Math.abs(curr[0] - scannerIndexes[checkIndex][0]) +
+      Math.abs(curr[1] - scannerIndexes[checkIndex][1]) +
+      Math.abs(curr[2] - scannerIndexes[checkIndex][2]);
+
+    if (sum > distance) distance = sum;
+  }
+
+  return distance > acc ? distance : acc;
+}, 0);
+
+console.log("Part 2:", manhattanDistance);
