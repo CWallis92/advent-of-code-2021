@@ -14,17 +14,26 @@ const algorithm = data[0];
 
 const inputImage = data[1].split("\n");
 
-console.log(JSON.stringify(inputImage).replace(/[^#]/g, "").length);
-
-const enhance = (arr, iterations = 1) => {
+const enhance = (arr, iterations = 1, count = 0) => {
   if (iterations === 0) return arr;
 
-  const largeInput = JSON.parse(JSON.stringify(arr)).map((row) => `..${row}..`);
+  const largeInput = JSON.parse(JSON.stringify(arr)).map((row) => {
+    return algorithm[0] === "#" && count % 2 === 1
+      ? `##${row}##`
+      : `..${row}..`;
+  });
   const rowLength = largeInput[0].length;
-  largeInput.unshift(".".repeat(rowLength));
-  largeInput.unshift(".".repeat(rowLength));
-  largeInput.push(".".repeat(rowLength));
-  largeInput.push(".".repeat(rowLength));
+  if (algorithm[0] === "#" && count % 2 === 1) {
+    largeInput.unshift("#".repeat(rowLength));
+    largeInput.unshift("#".repeat(rowLength));
+    largeInput.push("#".repeat(rowLength));
+    largeInput.push("#".repeat(rowLength));
+  } else {
+    largeInput.unshift(".".repeat(rowLength));
+    largeInput.unshift(".".repeat(rowLength));
+    largeInput.push(".".repeat(rowLength));
+    largeInput.push(".".repeat(rowLength));
+  }
 
   let enhanced = largeInput.map((row) => row.split(""));
 
@@ -35,8 +44,10 @@ const enhance = (arr, iterations = 1) => {
         rowIndex >= enhanced.length - 1 ||
         colIndex < 1 ||
         colIndex >= enhanced[0].length - 1
-      )
+      ) {
+        if (algorithm[0] === "#" && count % 2 === 1) return "#";
         return ".";
+      }
 
       const binary = `${array[rowIndex - 1][colIndex - 1]}${
         array[rowIndex - 1][colIndex]
@@ -60,11 +71,12 @@ const enhance = (arr, iterations = 1) => {
   enhanced = enhanced.map((row) => row.substring(1, row.length - 1));
 
   iterations--;
+  count++;
 
-  return enhance(enhanced, iterations);
+  return enhance(enhanced, iterations, count);
 };
 
-const output = enhance(inputImage, 2).join("\n");
+const output = enhance(inputImage, 50).join("\n");
 
 fs.writeFileSync(`${__dirname}/day-20-output.txt`, output);
 
