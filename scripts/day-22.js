@@ -3,35 +3,12 @@ const fs = require("fs");
 const data = fs
   .readFileSync(
     `${__dirname}/../` +
-      "testData" +
-      // "data" +
+      // "testData" +
+      "data" +
       `/day-${__filename.split("/day-")[1].split(".")[0]}.txt`,
     "utf8"
   )
   .split("\n");
-
-const instructions = data
-  .map((instruction) => {
-    const coordsOnly = instruction.replace(/[^\d\.,-]/g, "").split(",");
-    return {
-      set: instruction.match(/\w{2,3}/)[0],
-      x: coordsOnly[0].split("..").map((x) => parseInt(x)),
-      y: coordsOnly[1].split("..").map((x) => parseInt(x)),
-      z: coordsOnly[2].split("..").map((x) => parseInt(x)),
-    };
-  })
-  .filter(({ x, y, z }) => {
-    return (
-      x[0] >= -50 &&
-      x[1] <= 50 &&
-      y[0] >= -50 &&
-      y[1] <= 50 &&
-      z[0] >= -50 &&
-      z[0] <= 50
-    );
-  });
-
-const onCuboids = [];
 
 const checkOverlap = (cuboid1, cuboid2) => {
   return !(
@@ -93,7 +70,7 @@ const getDistinctCuboids = (newCuboid, existingCuboid) => {
       z: [newCuboid.z[0], existingCuboid.z[0] - 1],
     });
   }
-  if (newCuboid.y[1] > existingCuboid.y[1]) {
+  if (newCuboid.z[1] > existingCuboid.z[1]) {
     reducedCuboids.push({
       x: [
         Math.max(newCuboid.x[0], existingCuboid.x[0]),
@@ -110,7 +87,7 @@ const getDistinctCuboids = (newCuboid, existingCuboid) => {
   return reducedCuboids;
 };
 
-instructions.forEach(({ set, x, y, z }) => {
+const setOnCuboids = ({ set, x, y, z }, onCuboids) => {
   let newCuboids = [{ x, y, z }],
     checkIndex = 0;
 
@@ -147,16 +124,47 @@ instructions.forEach(({ set, x, y, z }) => {
   if (set === "on" && newCuboids.length > 0) {
     onCuboids.push(...newCuboids);
   }
-  // console.log(onCuboids);
+};
+
+const onCount = (onCuboids) => {
+  return onCuboids.reduce((acc, { x, y, z }) => {
+    return (
+      acc +
+      (Math.abs(x[1] - x[0]) + 1) *
+        (Math.abs(y[1] - y[0]) + 1) *
+        (Math.abs(z[1] - z[0]) + 1)
+    );
+  }, 0);
+};
+
+const instructions2 = data.map((instruction) => {
+  const coordsOnly = instruction.replace(/[^\d\.,-]/g, "").split(",");
+  return {
+    set: instruction.match(/\w{2,3}/)[0],
+    x: coordsOnly[0].split("..").map((x) => parseInt(x)),
+    y: coordsOnly[1].split("..").map((x) => parseInt(x)),
+    z: coordsOnly[2].split("..").map((x) => parseInt(x)),
+  };
 });
 
-const onCount = onCuboids.reduce((acc, { x, y, z }) => {
+const instructions1 = instructions2.filter(({ x, y, z }) => {
   return (
-    acc +
-    (Math.abs(x[1] - x[0]) + 1) *
-      (Math.abs(y[1] - y[0]) + 1) *
-      (Math.abs(z[1] - z[0]) + 1)
+    x[0] >= -50 &&
+    x[1] <= 50 &&
+    y[0] >= -50 &&
+    y[1] <= 50 &&
+    z[0] >= -50 &&
+    z[0] <= 50
   );
-}, 0);
+});
 
-console.log(onCount);
+const onCuboids1 = [];
+const onCuboids2 = [];
+
+instructions1.forEach((instruction) => setOnCuboids(instruction, onCuboids1));
+
+instructions2.forEach((instruction) => setOnCuboids(instruction, onCuboids2));
+
+console.log("Part 1:", onCount(onCuboids1));
+
+console.log("Part 2:", onCount(onCuboids2));
